@@ -2,16 +2,38 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>IPTV Web Player</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <title>IPTV Player</title>
+  <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
+  <style>
+    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
+    .channel-list { margin-top: 1em; }
+    button { margin: 0.2em; padding: 0.5em 1em; }
+  </style>
 </head>
 <body>
-  <h1>IPTV Player Web</h1>
-  <select id="channelSelect"></select>
-  <br><br>
-  <video id="video" controls autoplay width="640" height="360"></video>
+  <h1>IPTV Player</h1>
+  <video id="video-player" class="video-js vjs-default-skin" controls autoplay width="800" height="450"></video>
+  <div class="channel-list" id="channel-buttons"></div>
 
-  <script src="/static/player.js"></script>
+  <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-hls@5.15.0/dist/videojs-contrib-hls.min.js"></script>
+  <script>
+    const player = videojs('video-player');
+    fetch('/channels')
+      .then(res => res.json())
+      .then(data => {
+        const container = document.getElementById('channel-buttons');
+        data.forEach(channel => {
+          const btn = document.createElement('button');
+          btn.textContent = channel.name;
+          btn.onclick = () => {
+            player.src({ src: channel.url, type: 'application/x-mpegURL' });
+            player.play();
+          };
+          container.appendChild(btn);
+        });
+      });
+  </script>
 </body>
 </html>
 

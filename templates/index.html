@@ -3,38 +3,120 @@
 <head>
   <meta charset="UTF-8">
   <title>IPTV Player</title>
-  ript src="//cdn.jsdelivr.net/npm/@clappr/player@0.8/dist/clappr.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swarmcloud-hls@latest/dist/p2p-engine.min.js"></script><script src="https://cdn.jsdelivr.net/npm/swarmcloud-hls@latest/dist/clappr-p2p-plugin.min.js"></script><sty
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://vjs.zencdn.net/8.5.2/video-js.css" rel="stylesheet" />
   <style>
-    body { font-family: sans-serif; background: #111; color: white; padding: 20px; }
-    .channel-list { margin-top: 1em; }
-    button { margin: 0.2em; padding: 0.5em 1em; }
+    body {
+      font-family: sans-serif;
+      background: #111;
+      color: white;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.5em;
+      margin-bottom: 10px;
+    }
+
+    video {
+      max-width: 100%;
+      height: auto;
+      border-radius: 10px;
+    }
+
+    .controls {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    button {
+      background: #333;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #555;
+    }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 1.2em; }
+      button { width: 100%; max-width: 200px; }
+    }
   </style>
 </head>
 <body>
-  <h1>IPTV Player</h1>
-  <video id="video-player" class="video-js vjs-default-skin" controls autoplay width="800" height="450"></video>
-  <div class="channel-list" id="channel-buttons"></div>
+
+  <h1>IPTV Reproductor</h1>
+
+  <video id="video-player" class="video-js vjs-default-skin" controls autoplay></video>
+
+  <div class="controls">
+    <button onclick="previousChannel()">⏮️ Anterior</button>
+    <button onclick="nextChannel()">⏭️ Siguiente</button>
+    <button onclick="toggleFullscreen()">🔲 Pantalla completa</button>
+  </div>
 
   <script src="https://vjs.zencdn.net/8.5.2/video.min.js"></script>
   <script>
     const player = videojs('video-player');
+    let currentChannelIndex = 0;
+    let channels = [];
+
+    function playChannel(index) {
+      if (channels.length === 0) return;
+      currentChannelIndex = index;
+      const channel = channels[index];
+      player.src({ src: channel.url, type: 'application/x-mpegURL' });
+      player.play();
+    }
+
+    function nextChannel() {
+      if (channels.length > 0) {
+        currentChannelIndex = (currentChannelIndex + 1) % channels.length;
+        playChannel(currentChannelIndex);
+      }
+    }
+
+    function previousChannel() {
+      if (channels.length > 0) {
+        currentChannelIndex = (currentChannelIndex - 1 + channels.length) % channels.length;
+        playChannel(currentChannelIndex);
+      }
+    }
+
+    function toggleFullscreen() {
+      const videoElement = document.getElementById('video-player_html5_api');
+      if (videoElement.requestFullscreen) {
+        videoElement.requestFullscreen();
+      } else if (videoElement.webkitRequestFullscreen) {
+        videoElement.webkitRequestFullscreen();
+      } else if (videoElement.msRequestFullscreen) {
+        videoElement.msRequestFullscreen();
+      }
+    }
+
     fetch('https://andresurbanoz7.github.io/repro4/channels.json')
       .then(res => res.json())
       .then(data => {
-        const container = document.getElementById('channel-buttons');
-        data.forEach(channel => {
-          const btn = document.createElement('button');
-          btn.textContent = channel.name;
-          btn.onclick = () => {
-            player.src({ src: channel.url, type: 'application/x-mpegURL' });
-            player.play();
-          };
-          container.appendChild(btn);
-        });
+        channels = data;
+        if (channels.length > 0) playChannel(0);
+      })
+      .catch(err => {
+        console.error("Error al cargar los canales:", err);
       });
   </script>
 </body>
 </html>
-
 
